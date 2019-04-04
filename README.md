@@ -1,6 +1,7 @@
 # SuiteDAV
 CalDAV implementation for SuiteCRM
 Currently only one way Sugar -> Outlook
+
 Keep in mind, this code is just a copy of an Example for SabreDAV with hackish adaption to SuiteCRM, so use it at your own risk and don't blame us if it eats your children.
 
 To install:
@@ -20,11 +21,15 @@ The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/calendarserver.php/cale
 https://sourceforge.net/projects/outlookcaldavsynchronizer/ will have unsuccessful connection test (The specified URL does not support calendar access) but it still works
 
 You can use 
-<pre>'caldav_calls_as_event' => true</pre>
-in config.php to include calls in your calendar sync.
+<pre>$sugar_config["caldav_calls_as_event"]=true;</pre>
+in config_override.php to include calls in your calendar sync.
 
 
 - If running on a development platform on windows with an environment such as xampp add 
 		SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1$
   to the httpd.conf in the <VirtualHost> or <Directory> section
 
+
+Tested Enviroenments:
+
+Linux PHP 7.3.3 - Mysql - SuiteCRM 7.8.27
