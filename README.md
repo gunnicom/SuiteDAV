@@ -1,6 +1,6 @@
 # SuiteDAV
 CalDAV implementation for SuiteCRM
-Currently only one way Sugar -> Outlook
+Currently only one way SuiteCRM -> Outlook
 
 Keep in mind, this code is just a copy of an Example for SabreDAV with hackish adaption to SuiteCRM, so use it at your own risk and don't blame us if it eats your children.
 
