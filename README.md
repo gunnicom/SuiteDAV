@@ -33,3 +33,4 @@ in config_override.php to include calls in your calendar sync.
 Tested Enviroenments:
 
 Linux PHP 7.3.3 - Mysql - SuiteCRM 7.8.27
+Windows PHP 7.2.2 - Mysql - SuiteCRM 7.11.2
