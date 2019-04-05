@@ -14,6 +14,10 @@ To install:
 		}
 - Run "composer update" to download SabreDAV http://sabre.io/
 
+**** IMPORTANT ****
+SuiteCRM upgrade will overwrite your composer.json file. After the upgrade to need to insert above changes again and run composer update
+
+
 - Copy the custom/DAVServer files from the this repository into <SuiteCRM>/custom/DAVServer folder. 
   (Create the DAVServer folder if it does not exist)
 	
