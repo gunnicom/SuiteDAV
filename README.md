@@ -5,7 +5,6 @@ Currently only one way SuiteCRM -> Outlook
 Keep in mind, this code is just a copy of an Example for SabreDAV with hackish adaption to SuiteCRM, so use it at your own risk and don't blame us if it eats your children.
 
 To install:
-- copy files from folder custom/DAVServer to your SuiteCRM installation (Folder custom/DAVServer)
 - Change your composer.json (within the SuiteCRM folder) 
 	adding "sabre/dav": "*" at the end of "require" section
 	adding "phpunit/phpunit": "^8.0" at the end of "require-dev" section for developers
@@ -15,7 +14,7 @@ To install:
 		}
 - Run "composer update" to download SabreDAV http://sabre.io/
 
-- Copy the custom/DAVServer files into <SuiteCRM>/custom/DAVServer folder. 
+- Copy the custom/DAVServer files from the this repository into <SuiteCRM>/custom/DAVServer folder. 
   (Create the DAVServer folder if it does not exist)
 	
 
