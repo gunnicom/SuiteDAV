@@ -15,6 +15,10 @@ To install:
 		}
 - Run "composer update" to download SabreDAV http://sabre.io/
 
+- Copy the custom/DAVServer files into <SuiteCRM>/custom/DAVServer folder. 
+  (Create the DAVServer folder if it does not exist)
+	
+
 The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/calendarserver.php/calendars/USERNAME/default/
 (replace YOURSUGARPATH and USERNAME)
 
@@ -33,4 +37,5 @@ in config_override.php to include calls in your calendar sync.
 Tested Enviroenments:
 
 Linux PHP 7.3.3 - Mysql - SuiteCRM 7.8.27
+
 Windows PHP 7.2.2 - Mysql - SuiteCRM 7.11.2
