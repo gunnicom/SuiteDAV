@@ -3,27 +3,6 @@
 if (!defined('sugarEntry'))
     define('sugarEntry', true);
 
-/*register_shutdown_function('errorHandler');
-
-function errorHandler() { 
-    $error = error_get_last();
-    $type = $error['type'];
-    $message = $error['message'];
-    if ($type == 64 && !empty($message)) {
-        echo "
-            <strong>
-              <font color=\"red\">
-              Fatal error captured:
-              </font>
-            </strong>
-        ";
-        echo "<pre>";
-        print_r($error);
-        echo "</pre>";
-    }
-}
-*/
-
 // For includes we need to change Dir to Sugar root folder
 chdir("../..");
 require_once 'config.php';
