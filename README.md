@@ -23,6 +23,7 @@ SuiteCRM upgrade will overwrite your composer.json file. After the upgrade to ne
 	
 
 The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/calendarserver.php/calendars/USERNAME/default/
+
 The CardDAV URL is https://YOURSUGARPATH/custom/DAVServer/addressbookserver.php/addressbooks/USERNAME/default/
 (replace YOURSUGARPATH and USERNAME)
 
