@@ -59,6 +59,7 @@ class SugarCardDAVBackend extends \Sabre\CardDAV\Backend\AbstractBackend
         $dt->setTimezone(new \DateTimeZone('UTC'));
         $revdate = $dt->format($format);
         //start preping the entry with vcard
+        $row['primary_address_street']= str_replace(["\r\n","\n","\r"], "\\n", $row['primary_address_street']);
         $entry['id'] = $row['id'];
         $entry['uri'] = $row['id'].'.vcf';
         $entry['lastmodified'] = (int)strtotime($revdate);
