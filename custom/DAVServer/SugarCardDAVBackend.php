@@ -59,7 +59,6 @@ class SugarCardDAVBackend extends \Sabre\CardDAV\Backend\AbstractBackend
         $dt->setTimezone(new \DateTimeZone('UTC'));
         $revdate = $dt->format($format);
         //start preping the entry with vcard
-        
         $entry['id'] = $row['id'];
         $entry['uri'] = $row['id'].'.vcf';
         $entry['lastmodified'] = (int)strtotime($revdate);
@@ -114,11 +113,13 @@ $row[alt_address_country]":;;$row[alt_address_street];$row[alt_address_city];$ro
     function getCards($addressBookId) {
         $addressBookId = $this->db->real_escape_string($addressBookId);
         $stmt = <<<SQL
-SELECT contacts.*, accounts.website, email_addresses.email_address, accounts.name AS org from contacts
-LEFT JOIN accounts_contacts ON accounts_contacts.contact_id = contacts.id
-LEFT JOIN accounts ON accounts.id = accounts_contacts.account_id
+SELECT contacts.*, accounts.website, email_addresses.email_address, accounts.name AS org 
+FROM contacts
+LEFT JOIN accounts_contacts ON accounts_contacts.contact_id = contacts.id AND accounts_contacts.deleted=0
+LEFT JOIN accounts ON accounts.id = accounts_contacts.account_id AND accounts.deleted=0
 LEFT JOIN email_addr_bean_rel ON contacts.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Contacts' AND email_addr_bean_rel.deleted=0 
 LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
+WHERE contacts.deleted=0
 SQL;
         try {
             $sqlresult = $this->db->query($stmt);
@@ -168,12 +169,13 @@ SQL;
 
         $searchUri = rtrim($cardUri, '.vcf');
         $stmt = <<<SQL
-SELECT contacts.*, accounts.website, email_addresses.email_address, accounts.name AS org from contacts
-LEFT JOIN accounts_contacts ON accounts_contacts.contact_id = contacts.id
-LEFT JOIN accounts ON accounts.id = accounts_contacts.account_id
+SELECT contacts.*, accounts.website, email_addresses.email_address, accounts.name AS org 
+FROM contacts
+LEFT JOIN accounts_contacts ON accounts_contacts.contact_id = contacts.id AND accounts_contacts.deleted=0
+LEFT JOIN accounts ON accounts.id = accounts_contacts.account_id AND accounts.deleted=0
 LEFT JOIN email_addr_bean_rel ON contacts.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Contacts' AND email_addr_bean_rel.deleted=0 
 LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
-WHERE contacts.id = "$searchUri";
+WHERE contacts.id = "$searchUri" AND contacts.deleted=0;
 SQL;
         try {
             $sqlresult = $this->db->query($stmt);
