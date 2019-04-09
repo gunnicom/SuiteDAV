@@ -62,23 +62,23 @@ class SugarCardDAVBackend extends \Sabre\CardDAV\Backend\AbstractBackend
         $row['primary_address_street']= str_replace(["\r\n","\n","\r"], "\\n", $row['primary_address_street']);
         $entry['id'] = $row['id'];
         $entry['uri'] = $row['id'].'.vcf';
-        $entry['lastmodified'] = (int)strtotime($revdate);
+	$entry['lastmodified'] = (int)strtotime($revdate);
         $entry['carddata'] = <<<VCF
 BEGIN:VCARD
 VERSION:3.0
-N:$row[last_name];$row[first_name];;$row[salutation];
-FN:$row[first_name] $row[salutation]
-ORG:$row[org]
-TITLE:$row[title]
-TEL;TYPE=WORK,VOICE:$row[phone_work]
-TEL;TYPE=CELL,VOICE:$row[phone_mobile]
-TEL;TYPE=HOME,VOICE:$row[phone_home]
-ADR;TYPE=WORK,PREF:;;$row[primary_address_street];$row[primary_address_city];$row[primary_address_state];$row[primary_address_postalcode];$row[primary_address_country]
-EMAIL:$row[email_address]
-URL:$row[website]
-REV:$revdate
+N:{$row['last_name']};{$row['first_name']};;{$row['salutation']};
+FN:{$row['first_name']} {$row['salutation']}
+ORG:{$row['org']}
+TITLE:{$row['title']}
+TEL;TYPE=WORK,VOICE:{$row['phone_work']}
+TEL;TYPE=CELL,VOICE:{$row['phone_mobile']}
+TEL;TYPE=HOME,VOICE:{$row['phone_home']}
+ADR;TYPE=WORK,PREF:;;{$row['primary_address_street']};{$row['primary_address_city']};{$row['primary_address_state']};{$row['primary_address_postalcode']};{$row['primary_address_country']}
+EMAIL:{$row['email_address']}
+URL:{$row['website']}
+REV:{$revdate}
 TZ:UTC
-UID:urn:uuid:$row[id]
+UID:urn:uuid:{$row['id']}
 END:VCARD
 VCF;
 /*LABEL;TYPE=WORK,PREF:1$row[primary_address_street]\n$row[primary_address_city]\, $row[primary_address_postalcode]\n$row[primary_address_country]
