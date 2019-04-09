@@ -161,10 +161,11 @@ SQL;
      * @return array
      */
     function getCard($addressBookId, $cardUri) {
+        if($cardUri === null) return null;
+        
         $addressBookId = $this->db->real_escape_string($addressBookId);
         $cardUri = $this->db->real_escape_string($cardUri);
 
-        if($cardUri === null) return null;
         $searchUri = rtrim($cardUri, '.vcf');
         $stmt = <<<SQL
 SELECT contacts.*, accounts.website, email_addresses.email_address, accounts.name AS org from contacts
