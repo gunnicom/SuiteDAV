@@ -23,6 +23,8 @@ SuiteCRM upgrade will overwrite your composer.json file. After the upgrade to ne
 	
 
 The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/calendarserver.php/calendars/USERNAME/default/
+
+The CardDAV URL is https://YOURSUGARPATH/custom/DAVServer/addressbookserver.php/addressbooks/USERNAME/default/
 (replace YOURSUGARPATH and USERNAME)
 
 https://sourceforge.net/projects/outlookcaldavsynchronizer/ will have unsuccessful connection test (The specified URL does not support calendar access) but it still works
@@ -33,7 +35,9 @@ in config_override.php to include calls in your calendar sync.
 
 
 - If running on a development platform on windows with an environment such as xampp add 
+		
 		SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1$
+		
   to the httpd.conf in the <VirtualHost> or <Directory> section
 
 
