@@ -1,4 +1,5 @@
 <?php
+
 namespace Custom\DAVServer;
 
 use Sabre\CardDAV;
@@ -6,9 +7,8 @@ use Sabre\DAV;
 use Sabre\DAV\Exception\Forbidden;
 use Sabre\CardDAV\Backend\SyncSupport;
 
+class SugarCardDAVBackend extends \Sabre\CardDAV\Backend\AbstractBackend implements SyncSupport {
 
-class SugarCardDAVBackend extends \Sabre\CardDAV\Backend\AbstractBackend 
-        implements SyncSupport {
     /**
      * PDO connection
      *
@@ -38,31 +38,59 @@ class SugarCardDAVBackend extends \Sabre\CardDAV\Backend\AbstractBackend
         //('principals/admin','default calendar','default','','1');
         //$stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, synctoken FROM ' . $this->addressBooksTableName . ' WHERE principaluri = ?');
         //$stmt->execute([$principalUri]);
-
         $addressBooks[] = [
-            'id'                                                          => 0,
-            'uri'                                                         => 'default',
-            'principaluri'                                                => $principalUri,
-            '{DAV:}displayname'                                           => 'Contacts',
+            'id' => 0,
+            'uri' => 'default',
+            'principaluri' => $principalUri,
+            '{DAV:}displayname' => 'Contacts',
             '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => 'SuiteCRM Contacts',
-            '{http://calendarserver.org/ns/}getctag'                      => '1',
-            '{http://sabredav.org/ns}sync-token'                          => '1',
+            '{http://calendarserver.org/ns/}getctag' => '1',
+            '{http://sabredav.org/ns}sync-token' => '1',
+        ];
+        // Leads
+        $addressBooks[] = [
+            'id' => 1,
+            'uri' => 'Leads',
+            'principaluri' => $principalUri,
+            '{DAV:}displayname' => 'Leads',
+            '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => 'SuiteCRM Leads',
+            '{http://calendarserver.org/ns/}getctag' => '2',
+            '{http://sabredav.org/ns}sync-token' => '2',
+        ];
+        // Prospects
+        $addressBooks[] = [
+            'id' => 2,
+            'uri' => 'Prospects',
+            'principaluri' => $principalUri,
+            '{DAV:}displayname' => 'Prospects',
+            '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => 'SuiteCRM Prospects',
+            '{http://calendarserver.org/ns/}getctag' => '3',
+            '{http://sabredav.org/ns}sync-token' => '3',
+        ];
+        // Users
+        $addressBooks[] = [
+            'id' => 3,
+            'uri' => 'Users',
+            'principaluri' => $principalUri,
+            '{DAV:}displayname' => 'Users',
+            '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => 'SuiteCRM Users',
+            '{http://calendarserver.org/ns/}getctag' => '4',
+            '{http://sabredav.org/ns}sync-token' => '4',
         ];
         return $addressBooks;
-
     }
 
-    function getEntryWithVCardFromRow(&$row){
+    function getEntryWithVCardFromRow(&$row) {
         //convert the dates to UTC
         $format = 'Ymd\THis\Z';
         $dt = new \DateTime($row['date_modified']);
         $dt->setTimezone(new \DateTimeZone('UTC'));
         $revdate = $dt->format($format);
         //start preping the entry with vcard
-        $row['primary_address_street']= str_replace(["\r\n","\n","\r"], "\\n", $row['primary_address_street']);
+        $row['primary_address_street'] = str_replace(["\r\n", "\n", "\r"], "\\n", $row['primary_address_street']);
         $entry['id'] = $row['id'];
-        $entry['uri'] = $row['id'].'.vcf';
-	$entry['lastmodified'] = (int)strtotime($revdate);
+        $entry['uri'] = $row['id'] . '.vcf';
+        $entry['lastmodified'] = (int) strtotime($revdate);
         $entry['carddata'] = <<<VCF
 BEGIN:VCARD
 VERSION:3.0
@@ -81,17 +109,18 @@ TZ:UTC
 UID:urn:uuid:{$row['id']}
 END:VCARD
 VCF;
-/*LABEL;TYPE=WORK,PREF:1$row[primary_address_street]\n$row[primary_address_city]\, $row[primary_address_postalcode]\n$row[primary_address_country]
-*/        
-/*ADR;TYPE=HOME;LABEL="$row[alt_address_street]
-$row[alt_address_city], $row[alt_address_postalcode]
-$row[alt_address_country]":;;$row[alt_address_street];$row[alt_address_city];$row[alt_address_state];$row[alt_address_postalcode];$row[alt_address_country]*/
-        
-        
+        /* LABEL;TYPE=WORK,PREF:1$row[primary_address_street]\n$row[primary_address_city]\, $row[primary_address_postalcode]\n$row[primary_address_country]
+         */
+        /* ADR;TYPE=HOME;LABEL="$row[alt_address_street]
+          $row[alt_address_city], $row[alt_address_postalcode]
+          $row[alt_address_country]":;;$row[alt_address_street];$row[alt_address_city];$row[alt_address_state];$row[alt_address_postalcode];$row[alt_address_country] */
+
+
         $entry['size'] = strlen($entry['carddata']);
         $entry['etag'] = '"' . md5($row['id'] . $revdate) . '"';
         return $entry;
     }
+
     /**
      * Returns all cards for a specific addressbook id.
      *
@@ -112,8 +141,12 @@ $row[alt_address_country]":;;$row[alt_address_street];$row[alt_address_city];$ro
      * @return array
      */
     function getCards($addressBookId) {
+        $GLOBALS['log']->fatal("Addressbookid: {$addressBookId}");
+        // Id=0 default, Id=1 LEads
         $addressBookId = $this->db->real_escape_string($addressBookId);
-        $stmt = <<<SQL
+        switch ($addressBookId) {
+            case 0:
+                $stmt = <<<SQL
 SELECT contacts.*, accounts.website, email_addresses.email_address, accounts.name AS org 
 FROM contacts
 LEFT JOIN accounts_contacts ON accounts_contacts.contact_id = contacts.id AND accounts_contacts.deleted=0
@@ -122,12 +155,45 @@ LEFT JOIN email_addr_bean_rel ON contacts.id = email_addr_bean_rel.bean_id AND e
 LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
 WHERE contacts.deleted=0
 SQL;
+                break;
+            case 1:
+                $stmt = <<<SQL
+SELECT leads.*, website, email_addresses.email_address, account_name AS org 
+FROM leads
+LEFT JOIN email_addr_bean_rel ON leads.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Leads' AND email_addr_bean_rel.deleted=0 
+LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
+WHERE leads.deleted=0
+SQL;
+                break;
+            case 2:
+                $stmt = <<<SQL
+SELECT prospects.*, "" AS website, email_addresses.email_address, account_name AS org 
+FROM prospects
+LEFT JOIN email_addr_bean_rel ON prospects.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Prospects' AND email_addr_bean_rel.deleted=0 
+LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
+WHERE prospects.deleted=0
+SQL;
+                break;
+            case 3:
+                $stmt = <<<SQL
+SELECT users.*, 
+    address_street AS primary_address_street, address_city AS primary_address_city, address_state AS primary_address_state, address_postalcode AS primary_address_postalcode, address_country AS primary_address_country,
+    "" AS website, email_addresses.email_address, "" AS org 
+FROM users
+LEFT JOIN email_addr_bean_rel ON users.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Contacts' AND email_addr_bean_rel.deleted=0 
+LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
+WHERE users.deleted=0
+SQL;
+                break;
+// $row['primary_address_street']};{$row['primary_address_city']};{$row['primary_address_state']};{$row['primary_address_postalcode']};{$row['primary_address_country']
+        }
+
         try {
             $sqlresult = $this->db->query($stmt);
             while ($row = $sqlresult->fetch_assoc()) {
                 $entry = $this->getEntryWithVCardFromRow($row);
                 unset($entry['carddata']);
-                $result[] = $entry;        
+                $result[] = $entry;
             }
             return $result;
         } catch (Exception $e) {
@@ -135,19 +201,18 @@ SQL;
             $GLOBALS['log']->error($e->getMessage());
             throw e;
         }
-   
-        
-        /*$stmt = $this->pdo->prepare('SELECT id, uri, lastmodified, etag, size FROM ' . $this->cardsTableName . ' WHERE addressbookid = ?');
-        $stmt->execute([$addressbookId]);
 
-        $result = [];
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $row2['etag'] = '"' . $row2['etag'] . '"';
-            $row2['lastmodified'] = (int)$row['lastmodified'];
-            $result[] = $row2;
-        }
-        return $result;*/
 
+        /* $stmt = $this->pdo->prepare('SELECT id, uri, lastmodified, etag, size FROM ' . $this->cardsTableName . ' WHERE addressbookid = ?');
+          $stmt->execute([$addressbookId]);
+
+          $result = [];
+          while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+          $row2['etag'] = '"' . $row2['etag'] . '"';
+          $row2['lastmodified'] = (int)$row['lastmodified'];
+          $result[] = $row2;
+          }
+          return $result; */
     }
 
     /**
@@ -163,21 +228,57 @@ SQL;
      * @return array
      */
     function getCard($addressBookId, $cardUri) {
-        if($cardUri === null) return null;
-        
+        $GLOBALS['log']->fatal("Addressbookid: {$addressBookId}");
+        // Id=0 default, Id=1 LEads
+        if ($cardUri === null)
+            return null;
+
         $addressBookId = $this->db->real_escape_string($addressBookId);
         $cardUri = $this->db->real_escape_string($cardUri);
 
         $searchUri = rtrim($cardUri, '.vcf');
-        $stmt = <<<SQL
+        switch ($addressBookId) {
+            case 0:
+                $stmt = <<<SQL
 SELECT contacts.*, accounts.website, email_addresses.email_address, accounts.name AS org 
 FROM contacts
 LEFT JOIN accounts_contacts ON accounts_contacts.contact_id = contacts.id AND accounts_contacts.deleted=0
 LEFT JOIN accounts ON accounts.id = accounts_contacts.account_id AND accounts.deleted=0
 LEFT JOIN email_addr_bean_rel ON contacts.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Contacts' AND email_addr_bean_rel.deleted=0 
 LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
-WHERE contacts.id = "$searchUri" AND contacts.deleted=0;
+WHERE contacts.deleted=0 AND contacts.id = "$searchUri" 
 SQL;
+                break;
+            case 1:
+                $stmt = <<<SQL
+SELECT leads.*, website, email_addresses.email_address, account_name AS org 
+FROM leads
+LEFT JOIN email_addr_bean_rel ON leads.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Leads' AND email_addr_bean_rel.deleted=0 
+LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
+WHERE leads.deleted=0 AND leads.id = "$searchUri"
+SQL;
+                break;
+            case 2:
+                $stmt = <<<SQL
+SELECT prospects.*, "" AS website, email_addresses.email_address, account_name AS org 
+FROM prospects
+LEFT JOIN email_addr_bean_rel ON prospects.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Prospects' AND email_addr_bean_rel.deleted=0 
+LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
+WHERE prospects.deleted=0 AND prospects.id = "$searchUri"
+SQL;
+                break;
+            case 3:
+                $stmt = <<<SQL
+SELECT users.*, 
+    address_street AS primary_address_street, address_city AS primary_address_city, address_state AS primary_address_state, address_postalcode AS primary_address_postalcode, address_country AS primary_address_country,
+    "" AS website, email_addresses.email_address, "" AS org 
+FROM users
+LEFT JOIN email_addr_bean_rel ON users.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Contacts' AND email_addr_bean_rel.deleted=0 
+LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0
+WHERE users.deleted=0 AND users.id = "$searchUri"
+SQL;
+                break;
+        }
         try {
             $sqlresult = $this->db->query($stmt);
             if ($row = $sqlresult->fetch_assoc()) {
@@ -190,17 +291,16 @@ SQL;
             throw e;
         }
         return null;
-        /*$stmt = $this->pdo->prepare('SELECT id, carddata, uri, lastmodified, etag, size FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri = ? LIMIT 1');
-        $stmt->execute([$addressBookId, $cardUri]);
+        /* $stmt = $this->pdo->prepare('SELECT id, carddata, uri, lastmodified, etag, size FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri = ? LIMIT 1');
+          $stmt->execute([$addressBookId, $cardUri]);
 
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+          $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if (!$result) return false;
+          if (!$result) return false;
 
-        $result['etag'] = '"' . $result['etag'] . '"';
-        $result['lastmodified'] = (int)$result['lastmodified'];
-        return $result;*/
-
+          $result['etag'] = '"' . $result['etag'] . '"';
+          $result['lastmodified'] = (int)$result['lastmodified'];
+          return $result; */
     }
 
     /**
@@ -219,23 +319,20 @@ SQL;
         return array_map(function($uri) use ($addressBookId) {
             return $this->getCard($addressBookId, $uri);
         }, $uris);
-        /*$query = 'SELECT id, uri, lastmodified, etag, size, carddata FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri IN (';
-        // Inserting a whole bunch of question marks
-        $query .= implode(',', array_fill(0, count($uris), '?'));
-        $query .= ')';
+        /* $query = 'SELECT id, uri, lastmodified, etag, size, carddata FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri IN (';
+          // Inserting a whole bunch of question marks
+          $query .= implode(',', array_fill(0, count($uris), '?'));
+          $query .= ')';
 
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute(array_merge([$addressBookId], $uris));
-        $result = [];
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $row2['etag'] = '"' . $row2['etag'] . '"';
-            $row2['lastmodified'] = (int)$row['lastmodified'];
-            $result[] = $row2;
-        }
-        return $result;*/
-        
-        
-
+          $stmt = $this->pdo->prepare($query);
+          $stmt->execute(array_merge([$addressBookId], $uris));
+          $result = [];
+          while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+          $row2['etag'] = '"' . $row2['etag'] . '"';
+          $row2['lastmodified'] = (int)$row['lastmodified'];
+          $result[] = $row2;
+          }
+          return $result; */
     }
 
     /**
@@ -266,23 +363,22 @@ SQL;
     function createCard($addressBookId, $cardUri, $cardData) {
         //not supported
         return "";
-        /*$stmt = $this->pdo->prepare('INSERT INTO ' . $this->cardsTableName . ' (carddata, uri, lastmodified, addressbookid, size, etag) VALUES (?, ?, ?, ?, ?, ?)');
+        /* $stmt = $this->pdo->prepare('INSERT INTO ' . $this->cardsTableName . ' (carddata, uri, lastmodified, addressbookid, size, etag) VALUES (?, ?, ?, ?, ?, ?)');
 
-        $etag = md5($cardData);
+          $etag = md5($cardData);
 
-        $stmt->execute([
-            $cardData,
-            $cardUri,
-            time(),
-            $addressBookId,
-            strlen($cardData),
-            $etag,
-        ]);
+          $stmt->execute([
+          $cardData,
+          $cardUri,
+          time(),
+          $addressBookId,
+          strlen($cardData),
+          $etag,
+          ]);
 
-        $this->addChange($addressBookId, $cardUri, 1);
+          $this->addChange($addressBookId, $cardUri, 1);
 
-        return '"' . $etag . '"';*/
-
+          return '"' . $etag . '"'; */
     }
 
     /**
@@ -313,22 +409,21 @@ SQL;
     function updateCard($addressBookId, $cardUri, $cardData) {
         //not supported
         return "";
-        /*$stmt = $this->pdo->prepare('UPDATE ' . $this->cardsTableName . ' SET carddata = ?, lastmodified = ?, size = ?, etag = ? WHERE uri = ? AND addressbookid =?');
+        /* $stmt = $this->pdo->prepare('UPDATE ' . $this->cardsTableName . ' SET carddata = ?, lastmodified = ?, size = ?, etag = ? WHERE uri = ? AND addressbookid =?');
 
-        $etag = md5($cardData);
-        $stmt->execute([
-            $cardData,
-            time(),
-            strlen($cardData),
-            $etag,
-            $cardUri,
-            $addressBookId
-        ]);
+          $etag = md5($cardData);
+          $stmt->execute([
+          $cardData,
+          time(),
+          strlen($cardData),
+          $etag,
+          $cardUri,
+          $addressBookId
+          ]);
 
-        $this->addChange($addressBookId, $cardUri, 2);
+          $this->addChange($addressBookId, $cardUri, 2);
 
-        return '"' . $etag . '"';*/
-
+          return '"' . $etag . '"'; */
     }
 
     /**
@@ -341,13 +436,12 @@ SQL;
     function deleteCard($addressBookId, $cardUri) {
         //not supported
         return false;
-        /*$stmt = $this->pdo->prepare('DELETE FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri = ?');
-        $stmt->execute([$addressBookId, $cardUri]);
+        /* $stmt = $this->pdo->prepare('DELETE FROM ' . $this->cardsTableName . ' WHERE addressbookid = ? AND uri = ?');
+          $stmt->execute([$addressBookId, $cardUri]);
 
-        $this->addChange($addressBookId, $cardUri, 3);
+          $this->addChange($addressBookId, $cardUri, 3);
 
-        return $stmt->rowCount() === 1;*/
-
+          return $stmt->rowCount() === 1; */
     }
 
     /**
@@ -410,63 +504,62 @@ SQL;
         //not supported
         return [];
         // Current synctoken
-        /*$stmt = $this->pdo->prepare('SELECT synctoken FROM ' . $this->addressBooksTableName . ' WHERE id = ?');
-        $stmt->execute([$addressBookId]);
-        $currentToken = $stmt->fetchColumn(0);
+        /* $stmt = $this->pdo->prepare('SELECT synctoken FROM ' . $this->addressBooksTableName . ' WHERE id = ?');
+          $stmt->execute([$addressBookId]);
+          $currentToken = $stmt->fetchColumn(0);
 
-        if (is_null($currentToken)) return null;
+          if (is_null($currentToken)) return null;
 
-        $result = [
-            'syncToken' => $currentToken,
-            'added'     => [],
-            'modified'  => [],
-            'deleted'   => [],
-        ];
+          $result = [
+          'syncToken' => $currentToken,
+          'added'     => [],
+          'modified'  => [],
+          'deleted'   => [],
+          ];
 
-        if ($syncToken) {
+          if ($syncToken) {
 
-            $query = "SELECT uri, operation FROM " . $this->addressBookChangesTableName . " WHERE synctoken >= ? AND synctoken < ? AND addressbookid = ? ORDER BY synctoken";
-            if ($limit > 0) $query .= " LIMIT " . (int)$limit;
+          $query = "SELECT uri, operation FROM " . $this->addressBookChangesTableName . " WHERE synctoken >= ? AND synctoken < ? AND addressbookid = ? ORDER BY synctoken";
+          if ($limit > 0) $query .= " LIMIT " . (int)$limit;
 
-            // Fetching all changes
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$syncToken, $currentToken, $addressBookId]);
+          // Fetching all changes
+          $stmt = $this->pdo->prepare($query);
+          $stmt->execute([$syncToken, $currentToken, $addressBookId]);
 
-            $changes = [];
+          $changes = [];
 
-            // This loop ensures that any duplicates are overwritten, only the
-            // last change on a node is relevant.
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+          // This loop ensures that any duplicates are overwritten, only the
+          // last change on a node is relevant.
+          while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 
-                $changes[$row['uri']] = $row2['operation'];
+          $changes[$row['uri']] = $row2['operation'];
 
-            }
+          }
 
-            foreach ($changes as $uri => $operation) {
+          foreach ($changes as $uri => $operation) {
 
-                switch ($operation) {
-                    case 1:
-                        $result['added'][] = $uri;
-                        break;
-                    case 2:
-                        $result['modified'][] = $uri;
-                        break;
-                    case 3:
-                        $result['deleted'][] = $uri;
-                        break;
-                }
+          switch ($operation) {
+          case 1:
+          $result['added'][] = $uri;
+          break;
+          case 2:
+          $result['modified'][] = $uri;
+          break;
+          case 3:
+          $result['deleted'][] = $uri;
+          break;
+          }
 
-            }
-        } else {
-            // No synctoken supplied, this is the initial sync.
-            $query = "SELECT uri FROM " . $this->cardsTableName . " WHERE addressbookid = ?";
-            $stmt = $this->pdo->prepare($query);
-            $stmt->execute([$addressBookId]);
+          }
+          } else {
+          // No synctoken supplied, this is the initial sync.
+          $query = "SELECT uri FROM " . $this->cardsTableName . " WHERE addressbookid = ?";
+          $stmt = $this->pdo->prepare($query);
+          $stmt->execute([$addressBookId]);
 
-            $result['added'] = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-        }
-        return $result;*/
-
+          $result['added'] = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+          }
+          return $result; */
     }
 
     /**
@@ -480,19 +573,19 @@ SQL;
     protected function addChange($addressBookId, $objectUri, $operation) {
         //not supported
         return;
-        /*$stmt = $this->pdo->prepare('INSERT INTO ' . $this->addressBookChangesTableName . ' (uri, synctoken, addressbookid, operation) SELECT ?, synctoken, ?, ? FROM ' . $this->addressBooksTableName . ' WHERE id = ?');
-        $stmt->execute([
-            $objectUri,
-            $addressBookId,
-            $operation,
-            $addressBookId
-        ]);
-        $stmt = $this->pdo->prepare('UPDATE ' . $this->addressBooksTableName . ' SET synctoken = synctoken + 1 WHERE id = ?');
-        $stmt->execute([
-            $addressBookId
-        ]);*/
-
+        /* $stmt = $this->pdo->prepare('INSERT INTO ' . $this->addressBookChangesTableName . ' (uri, synctoken, addressbookid, operation) SELECT ?, synctoken, ?, ? FROM ' . $this->addressBooksTableName . ' WHERE id = ?');
+          $stmt->execute([
+          $objectUri,
+          $addressBookId,
+          $operation,
+          $addressBookId
+          ]);
+          $stmt = $this->pdo->prepare('UPDATE ' . $this->addressBooksTableName . ' SET synctoken = synctoken + 1 WHERE id = ?');
+          $stmt->execute([
+          $addressBookId
+          ]); */
     }
+
     /**
      * Deletes an entire addressbook and all its contents
      *
@@ -502,15 +595,16 @@ SQL;
     function deleteAddressBook($addressBookId) {
         //not supported
         return;
-        /*$stmt = $this->pdo->prepare('DELETE FROM ' . $this->cardsTableName . ' WHERE addressbookid = ?');
-        $stmt->execute([$addressBookId]);
+        /* $stmt = $this->pdo->prepare('DELETE FROM ' . $this->cardsTableName . ' WHERE addressbookid = ?');
+          $stmt->execute([$addressBookId]);
 
-        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->addressBooksTableName . ' WHERE id = ?');
-        $stmt->execute([$addressBookId]);
+          $stmt = $this->pdo->prepare('DELETE FROM ' . $this->addressBooksTableName . ' WHERE id = ?');
+          $stmt->execute([$addressBookId]);
 
-        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->addressBookChangesTableName . ' WHERE addressbookid = ?');
-        $stmt->execute([$addressBookId]);*/
+          $stmt = $this->pdo->prepare('DELETE FROM ' . $this->addressBookChangesTableName . ' WHERE addressbookid = ?');
+          $stmt->execute([$addressBookId]); */
     }
+
     /**
      * Updates properties for an address book.
      *
@@ -530,47 +624,47 @@ SQL;
     function updateAddressBook($addressBookId, \Sabre\DAV\PropPatch $propPatch) {
         //not supported
         return false;
-        /*$supportedProperties = [
-            '{DAV:}displayname',
-            '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description',
-        ];
+        /* $supportedProperties = [
+          '{DAV:}displayname',
+          '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description',
+          ];
 
-        $propPatch->handle($supportedProperties, function($mutations) use ($addressBookId) {
+          $propPatch->handle($supportedProperties, function($mutations) use ($addressBookId) {
 
-            $updates = [];
-            foreach ($mutations as $property => $newValue) {
+          $updates = [];
+          foreach ($mutations as $property => $newValue) {
 
-                switch ($property) {
-                    case '{DAV:}displayname' :
-                        $updates['displayname'] = $newValue;
-                        break;
-                    case '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' :
-                        $updates['description'] = $newValue;
-                        break;
-                }
-            }
-            $query = 'UPDATE ' . $this->addressBooksTableName . ' SET ';
-            $first = true;
-            foreach ($updates as $key => $value) {
-                if ($first) {
-                    $first = false;
-                } else {
-                    $query .= ', ';
-                }
-                $query .= ' ' . $key . ' = :' . $key . ' ';
-            }
-            $query .= ' WHERE id = :addressbookid';
+          switch ($property) {
+          case '{DAV:}displayname' :
+          $updates['displayname'] = $newValue;
+          break;
+          case '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' :
+          $updates['description'] = $newValue;
+          break;
+          }
+          }
+          $query = 'UPDATE ' . $this->addressBooksTableName . ' SET ';
+          $first = true;
+          foreach ($updates as $key => $value) {
+          if ($first) {
+          $first = false;
+          } else {
+          $query .= ', ';
+          }
+          $query .= ' ' . $key . ' = :' . $key . ' ';
+          }
+          $query .= ' WHERE id = :addressbookid';
 
-            $stmt = $this->pdo->prepare($query);
-            $updates['addressbookid'] = $addressBookId;
+          $stmt = $this->pdo->prepare($query);
+          $updates['addressbookid'] = $addressBookId;
 
-            $stmt->execute($updates);
+          $stmt->execute($updates);
 
-            $this->addChange($addressBookId, "", 2);
+          $this->addChange($addressBookId, "", 2);
 
-            return true;
+          return true;
 
-        });*/
+          }); */
     }
 
     /**
@@ -584,33 +678,34 @@ SQL;
     function createAddressBook($principalUri, $url, array $properties) {
         //not supported
         return null;
-        /*$values = [
-            'displayname'  => null,
-            'description'  => null,
-            'principaluri' => $principalUri,
-            'uri'          => $url,
-        ];
+        /* $values = [
+          'displayname'  => null,
+          'description'  => null,
+          'principaluri' => $principalUri,
+          'uri'          => $url,
+          ];
 
-        foreach ($properties as $property => $newValue) {
+          foreach ($properties as $property => $newValue) {
 
-            switch ($property) {
-                case '{DAV:}displayname' :
-                    $values['displayname'] = $newValue;
-                    break;
-                case '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' :
-                    $values['description'] = $newValue;
-                    break;
-                default :
-                    throw new DAV\Exception\BadRequest('Unknown property: ' . $property);
-            }
+          switch ($property) {
+          case '{DAV:}displayname' :
+          $values['displayname'] = $newValue;
+          break;
+          case '{' . CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' :
+          $values['description'] = $newValue;
+          break;
+          default :
+          throw new DAV\Exception\BadRequest('Unknown property: ' . $property);
+          }
 
-        }
+          }
 
-        $query = 'INSERT INTO ' . $this->addressBooksTableName . ' (uri, displayname, description, principaluri, synctoken) VALUES (:uri, :displayname, :description, :principaluri, 1)';
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute($values);
-        return $this->pdo->lastInsertId(
-            $this->addressBooksTableName . '_id_seq'
-        );*/
+          $query = 'INSERT INTO ' . $this->addressBooksTableName . ' (uri, displayname, description, principaluri, synctoken) VALUES (:uri, :displayname, :description, :principaluri, 1)';
+          $stmt = $this->pdo->prepare($query);
+          $stmt->execute($values);
+          return $this->pdo->lastInsertId(
+          $this->addressBooksTableName . '_id_seq'
+          ); */
     }
+
 }
