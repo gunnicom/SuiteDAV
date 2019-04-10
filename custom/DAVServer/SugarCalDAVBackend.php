@@ -156,6 +156,7 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
                     '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . '0',
                     //'{http://sabredav.org/ns}sync-token' => $row['synctoken'] ? $row['synctoken'] : '0',
                     '{http://sabredav.org/ns}sync-token' => '0',
+                    '{http://sabredav.org/ns}read-only' => '1',
                     '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
                     '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new CalDAV\Xml\Property\ScheduleCalendarTransp($row['transparent'] ? 'transparent' : 'opaque'),
                 ];
