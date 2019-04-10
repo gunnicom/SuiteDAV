@@ -210,7 +210,7 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
         $assigned_user_id = $this->db->real_escape_string($calendarId);
         $stmt = "SELECT id, date_modified, date_start, date_end, name, description, location FROM meetings WHERE deleted = 0 AND assigned_user_id='{$assigned_user_id}' ";
         if ($this->caldav_calls_as_event == true) {
-            $stmt .= " UNION SELECT id, date_modified, date_start, date_end, name FROM calls WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
+            $stmt .= " UNION SELECT id, date_modified, date_start, date_end, name, description, 'Call' AS location FROM calls WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
         }
         try {
             $sqlresult = $this->db->query($stmt);
