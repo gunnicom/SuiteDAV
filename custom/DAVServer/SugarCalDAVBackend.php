@@ -310,7 +310,8 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
         $calendarParams = explode("|", $calendarId);
         $assigned_user_id = $this->db->real_escape_string($calendarParams[1]);
         $paramobjectUri = $this->db->real_escape_string($objectUri);
-        $stmt = $this->getQueryForUser($calendarParams[0], $assigned_user_id) . " AND CONCAT(id,'.ics')='{$paramobjectUri}' ";
+        $idfield=$calendarParams[0]=="Events"?"fp_events.id":"id";
+        $stmt = $this->getQueryForUser($calendarParams[0], $assigned_user_id) . " AND CONCAT({$idfield},'.ics')='{$paramobjectUri}' ";
         if ($calendarParams[0]=="default" && $this->caldav_calls_as_event == true) {
             $stmt .= " UNION " . $this->getQueryForUser("Calls", $assigned_user_id) . " AND CONCAT(id,'.ics')='{$paramobjectUri}' ";
         }
@@ -358,9 +359,9 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
                 return " SELECT id, date_modified, date_start, date_end, name, description, 'Call' AS location FROM calls WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
             Case "Events":
                 return " SELECT fp_events.id, fp_events.date_modified, fp_events.date_start, fp_events.date_end, fp_events.name, fp_events.description, fp_event_locations.name AS location FROM fp_events "
-                        . "LEFT JOIN fp_events_fp_event_locations_1_c ON fp_events.id=fp_events_fp_event_locations_1_c.fp_events_fp_event_locations_1fp_events_ida AND fp_events.id=fp_events_fp_event_locations_1_c.deleted=0 "
-                        . "LEFT JOIN fp_event_locations ON fp_events_fp_event_locations_1_c.fp_events_fp_event_locations_1fp_event_locations_idb=fp_event_locations.id AND fp_event_locations.deleted=0 "
-                        . " WHERE fp_events.deleted = 0 AND fp_events.assigned_user_id='{$assigned_user_id}' ";
+                     . " LEFT JOIN fp_events_fp_event_locations_1_c ON fp_events.id=fp_events_fp_event_locations_1_c.fp_events_fp_event_locations_1fp_events_ida AND fp_events.id=fp_events_fp_event_locations_1_c.deleted=0 "
+                     . " LEFT JOIN fp_event_locations ON fp_events_fp_event_locations_1_c.fp_events_fp_event_locations_1fp_event_locations_idb=fp_event_locations.id AND fp_event_locations.deleted=0 "
+                     . " WHERE fp_events.deleted = 0 AND fp_events.assigned_user_id='{$assigned_user_id}' ";
             case "Meetings":
             default:
                 return " SELECT id, date_modified, date_start, date_end, name, description, location FROM meetings WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
