@@ -142,13 +142,14 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
     function getCalendarsForUser($principalUri) {
         //ACLController::checkAccess('Contacts', 'view', true);
         $paramprincipalUri = $this->db->real_escape_string($principalUri);
-        $stmt = "SELECT id, user_name, 'default' AS displayname, '#bbff00ff' as calendarcolor FROM users WHERE deleted=0 AND CONCAT('principals/',user_name)='{$paramprincipalUri}';";
+        $stmt = "SELECT id, user_name, '#bbff00ff' as calendarcolor FROM users WHERE deleted=0 AND CONCAT('principals/',user_name)='{$paramprincipalUri}';";
         try {
             $sqlresult = $this->db->query($stmt);
             while ($row = $sqlresult->fetch_assoc()) {
                 $components = ["VEVENT", "VTODO"];
                 $row['transparent'] = "";
                 // Default Calendar
+                $row['displayname']="default";
                 $calendar = [
                     'id' => "default|" . $row['id'],
                     'uri' => "default", //"calendars/{$row['user_name']}/default",
@@ -168,6 +169,7 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
                 $calendar["{urn:ietf:params:xml:ns:caldav}calendar-timezone"] = "UTC";
                 $calendars[] = $calendar;
                 // Meetings Calendar
+                $row['displayname']="Meetings";
                 $calendar = [
                     'id' => "Meetings|" . $row['id'],
                     'uri' => "Meetings", //"calendars/{$row['user_name']}/default",
@@ -187,6 +189,7 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
                 $calendar["{urn:ietf:params:xml:ns:caldav}calendar-timezone"] = "UTC";
                 $calendars[] = $calendar;
                 // Calls Calendar
+                $row['displayname']="Calls";
                 $calendar = [
                     'id' => "Calls|" . $row['id'],
                     'uri' => "Calls", //"calendars/{$row['user_name']}/default",
@@ -206,6 +209,7 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
                 $calendar["{urn:ietf:params:xml:ns:caldav}calendar-timezone"] = "UTC";
                 $calendars[] = $calendar;
                 // Event Calendar
+                $row['displayname']="Events";
                 $calendar = [
                     'id' => "Events|" . $row['id'],
                     'uri' => "Events", //"calendars/{$row['user_name']}/default",
