@@ -140,17 +140,75 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
      * @return array
      */
     function getCalendarsForUser($principalUri) {
+        //ACLController::checkAccess('Contacts', 'view', true);
         $paramprincipalUri = $this->db->real_escape_string($principalUri);
         $stmt = "SELECT id, user_name, 'default' AS displayname, '#bbff00ff' as calendarcolor FROM users WHERE deleted=0 AND CONCAT('principals/',user_name)='{$paramprincipalUri}';";
         try {
             $sqlresult = $this->db->query($stmt);
             while ($row = $sqlresult->fetch_assoc()) {
                 $components = ["VEVENT", "VTODO"];
-                $row['id'] = $row['id']; //==1?1:2; // 2e4b870d-5079-db56-e3b1-53f3452f63c3
                 $row['transparent'] = "";
+                // Default Calendar
                 $calendar = [
-                    'id' => $row['id'],
+                    'id' => "default|" . $row['id'],
                     'uri' => "default", //"calendars/{$row['user_name']}/default",
+                    'principaluri' => $principalUri,
+                    //'{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . ($row['synctoken'] ? $row['synctoken'] : '0'),
+                    '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . '0',
+                    //'{http://sabredav.org/ns}sync-token' => $row['synctoken'] ? $row['synctoken'] : '0',
+                    '{http://sabredav.org/ns}sync-token' => '0',
+                    '{http://sabredav.org/ns}read-only' => '1',
+                    '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
+                    '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new CalDAV\Xml\Property\ScheduleCalendarTransp($row['transparent'] ? 'transparent' : 'opaque'),
+                ];
+
+                foreach ($this->propertyMap as $xmlName => $dbName) {
+                    $calendar[$xmlName] = $row[$dbName];
+                }
+                $calendar["{urn:ietf:params:xml:ns:caldav}calendar-timezone"] = "UTC";
+                $calendars[] = $calendar;
+                // Meetings Calendar
+                $calendar = [
+                    'id' => "Meetings|" . $row['id'],
+                    'uri' => "Meetings", //"calendars/{$row['user_name']}/default",
+                    'principaluri' => $principalUri,
+                    //'{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . ($row['synctoken'] ? $row['synctoken'] : '0'),
+                    '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . '0',
+                    //'{http://sabredav.org/ns}sync-token' => $row['synctoken'] ? $row['synctoken'] : '0',
+                    '{http://sabredav.org/ns}sync-token' => '0',
+                    '{http://sabredav.org/ns}read-only' => '1',
+                    '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
+                    '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new CalDAV\Xml\Property\ScheduleCalendarTransp($row['transparent'] ? 'transparent' : 'opaque'),
+                ];
+
+                foreach ($this->propertyMap as $xmlName => $dbName) {
+                    $calendar[$xmlName] = $row[$dbName];
+                }
+                $calendar["{urn:ietf:params:xml:ns:caldav}calendar-timezone"] = "UTC";
+                $calendars[] = $calendar;
+                // Calls Calendar
+                $calendar = [
+                    'id' => "Calls|" . $row['id'],
+                    'uri' => "Calls", //"calendars/{$row['user_name']}/default",
+                    'principaluri' => $principalUri,
+                    //'{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . ($row['synctoken'] ? $row['synctoken'] : '0'),
+                    '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . '0',
+                    //'{http://sabredav.org/ns}sync-token' => $row['synctoken'] ? $row['synctoken'] : '0',
+                    '{http://sabredav.org/ns}sync-token' => '0',
+                    '{http://sabredav.org/ns}read-only' => '1',
+                    '{' . CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
+                    '{' . CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new CalDAV\Xml\Property\ScheduleCalendarTransp($row['transparent'] ? 'transparent' : 'opaque'),
+                ];
+
+                foreach ($this->propertyMap as $xmlName => $dbName) {
+                    $calendar[$xmlName] = $row[$dbName];
+                }
+                $calendar["{urn:ietf:params:xml:ns:caldav}calendar-timezone"] = "UTC";
+                $calendars[] = $calendar;
+                // Event Calendar
+                $calendar = [
+                    'id' => "Events|" . $row['id'],
+                    'uri' => "Events", //"calendars/{$row['user_name']}/default",
                     'principaluri' => $principalUri,
                     //'{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . ($row['synctoken'] ? $row['synctoken'] : '0'),
                     '{' . CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . '0',
@@ -207,10 +265,12 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
      * @return array
      */
     function getCalendarObjects($calendarId) {
-        $assigned_user_id = $this->db->real_escape_string($calendarId);
-        $stmt = "SELECT id, date_modified, date_start, date_end, name, description, location FROM meetings WHERE deleted = 0 AND assigned_user_id='{$assigned_user_id}' ";
-        if ($this->caldav_calls_as_event == true) {
-            $stmt .= " UNION SELECT id, date_modified, date_start, date_end, name, description, 'Call' AS location FROM calls WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
+        $calendarParams = explode("|", $calendarId);
+        $assigned_user_id = $this->db->real_escape_string($calendarParams[1]);
+        
+        $stmt = $this->getQueryForUser($calendarParams[0], $assigned_user_id);
+        if ($calendarParams[0]=="default" && $this->caldav_calls_as_event == true) {
+            $stmt .= " UNION " . $this->getQueryForUser("Calls", $assigned_user_id);
         }
         try {
             $sqlresult = $this->db->query($stmt);
@@ -243,11 +303,12 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
      * @return array|null
      */
     function getCalendarObject($calendarId, $objectUri) {
-        $assigned_user_id = $this->db->real_escape_string($calendarId);
+        $calendarParams = explode("|", $calendarId);
+        $assigned_user_id = $this->db->real_escape_string($calendarParams[1]);
         $paramobjectUri = $this->db->real_escape_string($objectUri);
-        $stmt = "SELECT id, date_modified, date_start, date_end, name, description, location FROM meetings WHERE deleted = 0 AND assigned_user_id='{$assigned_user_id}' AND CONCAT(id,'.ics')='{$paramobjectUri}' ";
-        if ($this->caldav_calls_as_event == true) {
-            $stmt .= " UNION SELECT id, date_modified, date_start, date_end, name, description, 'Call' AS location FROM calls WHERE deleted=0 AND CONCAT(id,'.ics')='{$paramobjectUri}' ";
+        $stmt = $this->getQueryForUser($calendarParams[0], $assigned_user_id) . " AND CONCAT(id,'.ics')='{$paramobjectUri}' ";
+        if ($calendarParams[0]=="default" && $this->caldav_calls_as_event == true) {
+            $stmt .= " UNION " . $this->getQueryForUser("Calls", $assigned_user_id) . " AND CONCAT(id,'.ics')='{$paramobjectUri}' ";
         }
         try {
             $sqlresult = $this->db->query($stmt);
@@ -285,6 +346,21 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
             'calendardata' => $calendardata,
             'component' => "vevent", //strtolower($row['componenttype']),
         ];
+    }
+
+    function getQueryForUser($type, $assigned_user_id) {
+        switch ($type) {
+            Case "Calls":
+                return " SELECT id, date_modified, date_start, date_end, name, description, 'Call' AS location FROM calls WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
+            Case "Events":
+                return " SELECT fp_events.id, fp_events.date_modified, fp_events.date_start, fp_events.date_end, fp_events.name, fp_events.description, fp_event_locations.name AS location FROM fp_events "
+                        . "LEFT JOIN fp_events_fp_event_locations_1_c ON fp_events.id=fp_events_fp_event_locations_1_c.fp_events_fp_event_locations_1fp_events_ida AND fp_events.id=fp_events_fp_event_locations_1_c.deleted=0 "
+                        . "LEFT JOIN fp_event_locations ON fp_events_fp_event_locations_1_c.fp_events_fp_event_locations_1fp_event_locations_idb=fp_event_locations.id AND fp_event_locations.deleted=0 "
+                        . " WHERE fp_events.deleted = 0 AND fp_events.assigned_user_id='{$assigned_user_id}' ";
+            case "Meetings":
+            default:
+                return " SELECT id, date_modified, date_start, date_end, name, description, location FROM meetings WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
+        }
     }
 
     /**
@@ -341,6 +417,7 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
      */
     function calendarQuery($calendarId, array $filters) {
         // TODO: $filters und altes raus
+        $calendarParams = explode("|", $calendarId);
         try {
             $componentType = null;
             $requirePostFilter = true;
@@ -370,10 +447,10 @@ class SugarCalDAVBackend extends \Sabre\CalDAV\Backend\AbstractBackend implement
                     }
                 }
             }
-            $assigned_user_id = $this->db->real_escape_string($calendarId);
-            $query = "SELECT id, date_modified, date_start, date_end, name FROM meetings WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
-            if ($this->caldav_calls_as_event == true) {
-                $query .= " UNION SELECT id, date_modified, date_start, date_end, name FROM calls WHERE deleted=0 AND assigned_user_id='{$assigned_user_id}' ";
+            $assigned_user_id = $this->db->real_escape_string($calendarParams[1]);
+            $query = $this->getQueryForUser($calendarParams[0], $assigned_user_id);
+            if ($calendarParams[0]=="default" && $this->caldav_calls_as_event == true) {
+                $query .= " UNION " . $this->getQueryForUser("Calls", $assigned_user_id);
             }
             if ($timeRange && $timeRange['start']) {
 
