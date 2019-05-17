@@ -22,10 +22,23 @@ SuiteCRM upgrade will overwrite your composer.json file. After the upgrade to ne
   (Create the DAVServer folder if it does not exist)
 	
 
-The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/calendarserver.php/calendars/USERNAME/default/
+The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/calendarserver.php/calendars/USERNAME/TYPE/
 
-The CardDAV URL is https://YOURSUGARPATH/custom/DAVServer/addressbookserver.php/addressbooks/USERNAME/default/
-(replace YOURSUGARPATH and USERNAME)
+The CardDAV URL is https://YOURSUGARPATH/custom/DAVServer/addressbookserver.php/addressbooks/USERNAME/TYPE/
+
+(replace YOURSUGARPATH and USERNAME and TYPE)
+
+possible TYPE for CalDAV
+* default (Meetings and if enabled by configuration merged with Calls)
+* Meetings
+* Calls
+* Events
+
+possible TYPE for CardDAV:
+* Contacts (or default)
+* Leads
+* Prospects
+* Users
 
 https://sourceforge.net/projects/outlookcaldavsynchronizer/ will have unsuccessful connection test (The specified URL does not support calendar access) but it still works
 
