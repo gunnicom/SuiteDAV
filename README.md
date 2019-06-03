@@ -59,3 +59,7 @@ Tested Enviroenments:
 Linux PHP 7.3.3 - Mysql - SuiteCRM 7.8.27
 
 Windows PHP 7.2.2 - Mysql - SuiteCRM 7.11.2
+
+Known Issues:
+
+There maybe problems with special chars in passwords like "€".
