@@ -236,7 +236,7 @@ SQL;
         $addressBookId = $this->db->real_escape_string($addressBookId);
         $cardUri = $this->db->real_escape_string($cardUri);
 
-        $searchUri = rtrim($cardUri, '.vcf');
+        $searchUri = substr($cardUri,0,-4);
         switch ($addressBookId) {
             case 0:
                 $stmt = <<<SQL
