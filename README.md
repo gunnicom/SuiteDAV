@@ -5,10 +5,12 @@ Currently only one way SuiteCRM -> Outlook
 Keep in mind, this code is just a copy of an Example for SabreDAV with hackish adaption to SuiteCRM, so use it at your own risk and don't blame us if it eats your children.
 
 To install:
-- When using SuiteCRM < 7.10.14 or < 7.11.2 change your composer.json (within the SuiteCRM folder) 
-	adding "sabre/dav": "*" at the end of "require" section
-	adding "phpunit/phpunit": "^8.0" at the end of "require-dev" section for developers
-  on the Windows/XAMPP we ran into problems with the PHP Version. Change the PHP Version in composer.json to the actual PHP Version you are running e.g.
+- When using SuiteCRM 7.10.x or 7.11.x change your composer.json (within the SuiteCRM folder)
+
+	- adding "sabre/dav": "*" at the end of "require" section
+	- adding "phpunit/phpunit": "^8.0" at the end of "require-dev" section for developers
+
+on the Windows/XAMPP we ran into problems with the PHP Version. Change the PHP Version in composer.json to the actual PHP Version you are running e.g.
 		"platform": {
 		  "php": "7.2.2"
 		}
