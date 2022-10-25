@@ -14,7 +14,7 @@ on the Windows/XAMPP we ran into problems with the PHP Version. Change the PHP V
 		"platform": {
 		  "php": "7.2.2"
 		}
-- Run "composer update" to download SabreDAV http://sabre.io/
+- Run "composer update --no-dev" to download SabreDAV http://sabre.io/
 
 **** IMPORTANT ****
 When using SuiteCRM < 7.10.14 or < 7.11.2 SuiteCRM upgrade will overwrite your composer.json file. After the upgrade you need to insert above changes again and run composer update
@@ -24,9 +24,9 @@ When using SuiteCRM < 7.10.14 or < 7.11.2 SuiteCRM upgrade will overwrite your c
   (Create the DAVServer folder if it does not exist)
 	
 
-The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/calendarserver.php/calendars/USERNAME/TYPE/
+The CalDAV URL is https://YOURSUGARPATH/custom/DAVServer/davserver.php/calendars/USERNAME/TYPE/
 
-The CardDAV URL is https://YOURSUGARPATH/custom/DAVServer/addressbookserver.php/addressbooks/USERNAME/TYPE/
+The CardDAV URL is https://YOURSUGARPATH/custom/DAVServer/davserver.php/addressbooks/USERNAME/TYPE/
 
 (replace YOURSUGARPATH and USERNAME and TYPE)
 
@@ -43,6 +43,8 @@ possible TYPE for CardDAV:
 * Users
 
 https://sourceforge.net/projects/outlookcaldavsynchronizer/ will have unsuccessful connection test (The specified URL does not support calendar access) but it still works
+OutlookCalDAVSynchronizer will show you the available resources if you just use the base URL and press "Test or Discover Settings". 
+DAV URL like https://YOURSUGARPATH/custom/DAVServer/davserver.php
 
 You can use 
 <pre>$sugar_config["caldav_calls_as_event"]=true;</pre>
@@ -59,6 +61,7 @@ in config_override.php to include calls in your calendar sync.
 Tested Enviroenments:
 
 Linux PHP 7.3.3 - Mysql - SuiteCRM 7.8.27
+Linux PHP 7.4.32 - Mysql - SuiteCRM 7.12.7
 
 Windows PHP 7.2.2 - Mysql - SuiteCRM 7.11.2
 
