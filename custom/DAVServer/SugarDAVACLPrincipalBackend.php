@@ -93,7 +93,7 @@ class SugarDAVACLPrincipalBackend extends \Sabre\DAVACL\PrincipalBackend\Abstrac
                 . "FROM users "
                 . "LEFT JOIN email_addr_bean_rel ON users.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Users' AND email_addr_bean_rel.deleted=0 "
                 . "LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0 "
-                . "WHERE users.deleted = 0 ;";
+                . "WHERE users.deleted = 0 AND users.status='Active';";
         try {
 
             $sqlresult = $this->db->query($stmt);
@@ -294,7 +294,7 @@ class SugarDAVACLPrincipalBackend extends \Sabre\DAVACL\PrincipalBackend\Abstrac
                 . "FROM users "
                 . "LEFT JOIN email_addr_bean_rel ON users.id = email_addr_bean_rel.bean_id AND email_addr_bean_rel.primary_address = 1 AND email_addr_bean_rel.bean_module='Users' AND email_addr_bean_rel.deleted=0 "
                 . "LEFT JOIN email_addresses ON email_addresses.id = email_addr_bean_rel.email_address_id AND email_addresses.deleted=0 "
-                . "WHERE users.deleted = 0;";
+                . "WHERE users.deleted = 0 AND users.status='Active';";
 
 
         $sqlresult = $this->db->query($stmt);
