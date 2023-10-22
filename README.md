@@ -4,7 +4,7 @@ Currently only one way SuiteCRM -> Outlook
 
 Keep in mind, this code is just a copy of an Example for SabreDAV with hackish adaption to SuiteCRM, so use it at your own risk and don't blame us if it eats your children.
 
-**To install on SuiteCRM 7.12.x:**
+**To install on SuiteCRM 7.1x.x:**
 
 - Copy the custom/ files from the this repository into <SuiteCRM>/custom/ folder. 
   (Create the DAVServer folder if it does not exist)
@@ -12,7 +12,7 @@ Keep in mind, this code is just a copy of an Example for SabreDAV with hackish a
 
 **Installation caveats**
 
-- When using SuiteCRM 7.10.x or 7.11.x you need to change your composer.json file (within the SuiteCRM folder)
+- When using SuiteCRM 7.1x.x you need to change your composer.json file (within the SuiteCRM folder)
 
 	- adding "sabre/dav": "*" at the end of "require" section
 	- adding "phpunit/phpunit": "^8.0" at the end of "require-dev" section for developers
@@ -58,6 +58,7 @@ In SuiteCRMs config_override.php add following to include calls in your calendar
 - Linux PHP 7.3.3 - Mysql - SuiteCRM 7.8.27
 - Linux PHP 7.4.32 - Mysql - SuiteCRM 7.12.7
 - Windows PHP 7.2.2 - Mysql - SuiteCRM 7.11.2
+- Linux PHP 8.2.11 - Mysql 8.0.34 - SuiteCRM 7.12.14
 
 **Known Issues:**
 
