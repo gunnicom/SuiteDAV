@@ -58,7 +58,7 @@ In SuiteCRMs config_override.php add following to include calls in your calendar
 - Linux PHP 7.3.3 - Mysql - SuiteCRM 7.8.27
 - Linux PHP 7.4.32 - Mysql - SuiteCRM 7.12.7
 - Windows PHP 7.2.2 - Mysql - SuiteCRM 7.11.2
-- Linux PHP 8.2.11 - Mysql 8.0.34 - SuiteCRM 7.12.14
+- Linux PHP 8.2.11 - Mysql 8.0.34 - SuiteCRM 7.14.0
 
 **Known Issues:**
 
